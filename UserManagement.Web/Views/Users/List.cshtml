@@ -12,6 +12,7 @@
                 <th>Forename</th>
                 <th>Surname</th>
                 <th>Email</th>
+                <th>Date Of Birth</th>
                 <th>Account Active</th>
                 <th style="width: 1px;"></th>
             </tr>
@@ -31,6 +32,9 @@
                     </td>
                     <td>
                         @item.Email
+                    </td>
+                    <td>
+                        @item.DateOfBirth
                     </td>
                     <td>
                         @(item.IsActive ? "Yes" : "No")

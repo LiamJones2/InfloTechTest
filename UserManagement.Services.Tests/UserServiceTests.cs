@@ -51,7 +51,7 @@ public class UserServiceTests
         result.Should().BeEquivalentTo(users.Where(u => u.IsActive == false));
     }
 
-    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", bool isActive = true)
+    private IQueryable<User> SetupUsers(string forename = "Johnny", string surname = "User", string email = "juser@example.com", string dateOfBirth = "1998-04-10", bool isActive = true)
     {
         var users = new[]
         {
@@ -60,6 +60,7 @@ public class UserServiceTests
                 Forename = forename,
                 Surname = surname,
                 Email = email,
+                DateOfBirth = DateOnly.Parse(dateOfBirth),
                 IsActive = isActive
             }
         }.AsQueryable();

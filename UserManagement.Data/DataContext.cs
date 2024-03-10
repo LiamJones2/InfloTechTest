@@ -33,6 +33,8 @@ public class DataContext : DbContext, IDataContext
     public IQueryable<TEntity> GetAll<TEntity>() where TEntity : class
         => base.Set<TEntity>();
 
+    public IQueryable<User> GetUserById<TEntity>(long id) where TEntity : class => base.Set<User>().Where(user => user.Id == id);
+
     public void Create<TEntity>(TEntity entity) where TEntity : class
     {
         base.Add(entity);

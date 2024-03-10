@@ -1,0 +1,21 @@
+﻿@model UserManagement.Web.Models.Users.UserListItemViewModel;
+
+<div>
+    <a asp-controller="Users" asp-action="List" class="btn" style="background:#000;color:white; width: 100px;">Back</a>
+    <div>
+        <a>Forename:</a>
+        <a>@Model.Forename</a>
+    </div>
+    <div>
+        <a>Surname:</a>
+        <a>@Model.Surname</a>
+    </div>
+    <div>
+        <a>Email:</a>
+        <a>@Model.Email</a>
+    </div>
+    <div>
+        <a>Date Of Birth:</a>
+        <a>@Model.DateOfBirth</a>
+    </div>
+</div>

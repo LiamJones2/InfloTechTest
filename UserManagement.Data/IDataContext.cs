@@ -1,16 +1,20 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using UserManagement.Models;
 
 namespace UserManagement.Data;
 
 public interface IDataContext
 {
+    public DbSet<User>? Users { get; set; }
     /// <summary>
     /// Get a list of items
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     /// <returns></returns>
     IQueryable<TEntity> GetAll<TEntity>() where TEntity : class;
+
+    IQueryable<User> GetUserById<TEntity>(long id) where TEntity : class;
 
     /// <summary>
     /// Create a new item

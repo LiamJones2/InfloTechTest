@@ -10,6 +10,10 @@ public interface IUserService
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    IEnumerable<User> FilterByActive(bool isActive);
+    IEnumerable<User> FilterByActive(bool? isActive);
     IEnumerable<User> GetAll();
+    public User? CheckIfUserExists(long id);
+    void AddNewUser(User user);
+    void DeleteUser(User user);
+    void EditUser(User user);
 }

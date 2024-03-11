@@ -24,7 +24,7 @@ public class User
     [Required(ErrorMessage = "Date of Birth is required.")]
     [DataType(DataType.Date, ErrorMessage = "Invalid date format.")]
     [DateOfBirthMinimum]
-    public DateOnly DateOfBirth { get; set; } = default!;
+    public DateOnly? DateOfBirth { get; set; }
 
     public bool IsActive { get; set; }
 }

@@ -24,7 +24,7 @@ public class UserListItemViewModel
     public string Email { get; set; } = default!;
 
     [DateOfBirthMinimum]
-    public DateOnly DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
 
     public bool IsActive { get; set; }
 }

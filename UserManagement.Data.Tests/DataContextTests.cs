@@ -30,7 +30,8 @@ public class DataContextTests
         {
             Forename = "Brand New",
             Surname = "User",
-            Email = "brandnewuser@example.com"
+            Email = "brandnewuser@example.com",
+            DateOfBirth = new DateOnly(2006,01,01)
         };
         context.Create(entity);
 
@@ -66,8 +67,8 @@ public class DataContextTests
         var entity = context.GetAll<User>().AsNoTracking().First();
         var updatedForename = "NewForename";
 
-        // Act: Update the user's Forename
-        context.Update(new User
+        // Act: UpdateEntity the user's Forename
+        context.UpdateEntity(new User
         {
             Id = entity.Id,
             Forename = updatedForename,

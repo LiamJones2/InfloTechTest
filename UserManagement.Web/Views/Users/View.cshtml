@@ -1,4 +1,4 @@
-﻿@model UserManagement.Web.Models.Users.UserListItemViewModel;
+﻿@model UserManagement.Web.Models.Users.UserDetailsViewModel;
 
 <div>
     <a asp-controller="Users" asp-action="List" class="btn" style="background:#000;color:white; width: 100px;">Back</a>
@@ -17,5 +17,38 @@
     <div>
         <a>Date Of Birth:</a>
         <a>@Model.DateOfBirth</a>
+    </div>
+
+    <div>
+        <h1>Logs</h1>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Created At</th>
+                    <th>Type</th>
+                    <th style="width: 1px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.logs)
+                {
+                    <tr>
+                        <td>
+                            @item.Id
+                        </td>
+                        <td>
+                            @item.CreatedAt
+                        </td>
+                        <td>
+                            @item.Type
+                        </td>
+                        <td>
+                            <a class="dropdown-item" asp-controller="Logs" asp-action="View" asp-route-id="@item.Id" class="btn btn-default">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

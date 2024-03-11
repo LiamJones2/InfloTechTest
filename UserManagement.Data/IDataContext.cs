@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Models;
 
@@ -7,6 +9,7 @@ namespace UserManagement.Data;
 public interface IDataContext
 {
     public DbSet<User>? Users { get; set; }
+    public DbSet<Log>? Logs { get; set; }
     /// <summary>
     /// Get a list of items
     /// </summary>
@@ -14,7 +17,11 @@ public interface IDataContext
     /// <returns></returns>
     IQueryable<TEntity> GetAll<TEntity>() where TEntity : class;
 
+    IEnumerable<Log> GetAllUserLogsById(long id);
+
     IQueryable<User> GetUserById<TEntity>(long id) where TEntity : class;
+
+    IQueryable<Log> GetLogById<TEntity>(long id) where TEntity : class;
 
     /// <summary>
     /// Create a new item
@@ -22,7 +29,7 @@ public interface IDataContext
     /// <typeparam name="TEntity"></typeparam>
     /// <param name="entity"></param>
     /// <returns></returns>
-    void Create<TEntity>(TEntity entity) where TEntity : class;
+    TEntity Create<TEntity>(TEntity entity) where TEntity : class;
 
     /// <summary>
     /// Uodate an existing item matching the ID
@@ -30,7 +37,9 @@ public interface IDataContext
     /// <typeparam name="TEntity"></typeparam>
     /// <param name="entity"></param>
     /// <returns></returns>
-    void Update<TEntity>(TEntity entity) where TEntity : class;
+    TEntity UpdateEntity<TEntity>(TEntity entity) where TEntity : class;
 
-    void Delete<TEntity>(TEntity entity) where TEntity : class;
+    TEntity Delete<TEntity>(TEntity entity) where TEntity : class;
+
+    void SetupLogs(IEnumerable<Log> logs);
 }

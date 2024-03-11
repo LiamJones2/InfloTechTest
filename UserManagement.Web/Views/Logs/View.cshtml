@@ -1,0 +1,25 @@
+﻿@model UserManagement.Data.Log
+
+<div>
+    <a asp-controller="Logs" asp-action="List" class="btn" style="background:#000;color:white; width: 100px;">Back</a>
+    <div>
+        <a>Id:</a>
+        <a>@Model.Id</a>
+    </div>
+    <div>
+        <a>User Id:</a>
+        <a>@Model.UserId</a>
+    </div>
+    <div>
+        <a>Created At:</a>
+        <a>@Model.CreatedAt</a>
+    </div>
+    <div>
+        <a>Type:</a>
+        <a>@Model.Type</a>
+    </div>
+    <div>
+        <a>Changes:</a> <br />
+        @Html.Raw(string.Join("<br>", Model.Changes))
+    </div>
+</div>

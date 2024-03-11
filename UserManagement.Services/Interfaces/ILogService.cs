@@ -1,19 +1,18 @@
 ﻿using System.Collections.Generic;
 using UserManagement.Models;
+using UserManagement.Data;
 
 namespace UserManagement.Services.Domain.Interfaces;
 
-public interface IUserService 
+public interface ILogService
 {
     /// <summary>
     /// Return users by active state
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    IEnumerable<User> FilterByActive(bool? isActive);
-    IEnumerable<User> GetAllUsers();
-    User? CheckIfUserExists(long id);
-    void AddNewUser(User user);
-    void DeleteUser(User user);
-    void EditUser(User user);
+    IEnumerable<Log> GetAllLogs();
+    IEnumerable<Log> FilterByType(string? type);
+    IEnumerable<Log> GetAllUserLogsById(long id);
+    Log? CheckIfLogExists(long id);
 }

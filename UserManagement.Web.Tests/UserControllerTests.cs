@@ -15,6 +15,7 @@ namespace UserManagement.Data.Tests;
 public class UserControllerTests
 {
     private readonly IDataContext _dataContextMock;
+    private readonly ILogService _logService;
     private readonly IUserService _userService;
     private readonly UsersController _controller;
 
@@ -24,7 +25,8 @@ public class UserControllerTests
 
 
         _userService = new UserService(_dataContextMock);
-        _controller = new UsersController(_userService);
+        _logService = new LogService(_dataContextMock);
+        _controller = new UsersController(_userService, _logService);
     }
 
     [Fact]

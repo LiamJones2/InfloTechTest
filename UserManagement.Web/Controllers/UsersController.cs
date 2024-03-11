@@ -2,13 +2,20 @@
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
+using UserManagement.Data;
+using UserManagement.Services.Domain.Implementations;
 
 namespace UserManagement.WebMS.Controllers;
 
 public class UsersController : Controller
 {
+    private readonly ILogService _logService;
     private readonly IUserService _userService;
-    public UsersController(IUserService userService) => _userService = userService;
+    public UsersController(IUserService userService, ILogService logService)
+    {
+        _userService = userService;
+        _logService = logService;
+    }
 
     [HttpGet]
     public ViewResult List(bool? isActive = null)
@@ -16,7 +23,7 @@ public class UsersController : Controller
         IEnumerable<User> userItems;
 
         if (isActive.HasValue) userItems = _userService.FilterByActive(isActive.Value);
-        else userItems = _userService.GetAll();
+        else userItems = _userService.GetAllUsers();
 
         UserListViewModel userViewModel = new UserListViewModel
         {
@@ -71,14 +78,17 @@ public class UsersController : Controller
 
         if (user != null)
         {
-            UserListItemViewModel modelUser = new UserListItemViewModel
+            IEnumerable<Log> userLogs = _logService.GetAllUserLogsById(id);
+
+            UserDetailsViewModel modelUser = new UserDetailsViewModel
             {
                 Id = user.Id,
                 Forename = user.Forename,
                 Surname = user.Surname,
                 Email = user.Email,
                 DateOfBirth = user.DateOfBirth,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                logs = userLogs
             };
 
             return View(modelUser);

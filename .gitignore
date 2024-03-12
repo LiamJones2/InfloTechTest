@@ -246,3 +246,7 @@ ModelManifest.xml
 
 # Inflo Custom Ignores
 **/*.js.map
+
+# Ignore appsettings.json
+appsettings.json
+/UserManagement.Web/appsettings.json

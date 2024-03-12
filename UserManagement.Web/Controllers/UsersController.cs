@@ -3,7 +3,7 @@ using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 using UserManagement.Data;
-using UserManagement.Services.Domain.Implementations;
+using System.Threading.Tasks;
 
 namespace UserManagement.WebMS.Controllers;
 
@@ -18,12 +18,13 @@ public class UsersController : Controller
     }
 
     [HttpGet]
-    public ViewResult List(bool? isActive = null)
+    public async Task<ViewResult> List(bool? isActive = null)
     {
+
         IEnumerable<User> userItems;
 
-        if (isActive.HasValue) userItems = _userService.FilterByActive(isActive.Value);
-        else userItems = _userService.GetAllUsers();
+        if (isActive.HasValue) userItems = await _userService.FilterByActive(isActive.GetValueOrDefault(false));
+        else userItems = await _userService.GetAllUsersAsync();
 
         UserListViewModel userViewModel = new UserListViewModel
         {
@@ -50,9 +51,9 @@ public class UsersController : Controller
     }
 
     [HttpGet]
-    public ViewResult Edit(long id)
+    public async Task<ViewResult> Edit(long id)
     {
-        User? user = _userService.CheckIfUserExists(id);
+        User? user = await _userService.CheckIfUserExists(id);
 
         if (user != null)
         {
@@ -72,13 +73,13 @@ public class UsersController : Controller
     }
 
     [HttpGet]
-    public ViewResult View(long id)
+    public async Task<ViewResult> View(long id)
     {
-        User? user = _userService.CheckIfUserExists(id);
+        User? user = await _userService.CheckIfUserExists(id);
 
         if (user != null)
         {
-            IEnumerable<Log> userLogs = _logService.GetAllUserLogsById(id);
+            IEnumerable<Log> userLogs = await _logService.GetAllUserLogsById(id);
 
             UserDetailsViewModel modelUser = new UserDetailsViewModel
             {
@@ -97,9 +98,9 @@ public class UsersController : Controller
     }
 
     [HttpGet]
-    public ViewResult Delete(long id)
+    public async Task<ViewResult> Delete(long id)
     {
-        User? user = _userService.CheckIfUserExists(id);
+        User? user = await _userService.CheckIfUserExists(id);
 
         if (user != null)
         {
@@ -119,7 +120,7 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult PostNewUser(UserListItemViewModel modelUser)
+    public async Task<IActionResult> PostNewUser(UserListItemViewModel modelUser)
     {
         if (ModelState.IsValid)
         {
@@ -132,7 +133,7 @@ public class UsersController : Controller
                 IsActive = true
             };
 
-            _userService.AddNewUser(user);
+            await _userService.AddNewUser(user);
 
             return RedirectToAction("List");
         }
@@ -143,7 +144,7 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult EditUser(UserListItemViewModel modelUser)
+    public async Task<IActionResult> EditUser(UserListItemViewModel modelUser)
     {
         if (modelUser == null)
         {
@@ -163,7 +164,7 @@ public class UsersController : Controller
                 IsActive = true
             };
 
-            _userService.EditUser(user);
+            await _userService.EditUser(user);
 
 
             return RedirectToAction("List");
@@ -175,7 +176,7 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult DeleteUser(UserListItemViewModel modelUser)
+    public async Task<IActionResult> DeleteUser(UserListItemViewModel modelUser)
     {
         if (ModelState.IsValid)
         {
@@ -189,7 +190,7 @@ public class UsersController : Controller
                 IsActive = true
             };
 
-            _userService.DeleteUser(user);
+            await _userService.DeleteUser(user);
 
             return RedirectToAction("List");
         }

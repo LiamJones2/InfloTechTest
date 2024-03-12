@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using UserManagement.Data;
 using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
+using System.Threading.Tasks;
 
 namespace UserManagement.Services.Domain.Implementations;
 
@@ -18,15 +17,15 @@ public class UserService : IUserService
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    public IEnumerable<User> FilterByActive(bool? isActive) => _dataAccess.GetAll<User>().Where(user => user.IsActive == isActive);
+    public async Task<IEnumerable<User>> FilterByActive(bool isActive) => await _dataAccess.FilterUserByActiveAsync(isActive);
 
-    public IEnumerable<User> GetAllUsers() => _dataAccess.GetAll<User>();
+    public async Task<IEnumerable<User>> GetAllUsersAsync() => await _dataAccess.GetAllAsync<User>();
 
-    public User? CheckIfUserExists(long id) => _dataAccess.GetUserById<User>(id).FirstOrDefault();
+    public async Task<User?> CheckIfUserExists(long id) => await _dataAccess.GetUserById(id);
 
-    public void AddNewUser(User user)
+    public async Task AddNewUser(User user)
     {
-        var createdUser = _dataAccess.Create(user);
+        var createdUser = await _dataAccess.Create(user);
 
         Log createLog = new Log
         {
@@ -40,12 +39,12 @@ public class UserService : IUserService
                 $"Date Of Birth: {createdUser.DateOfBirth:MM/dd/yyyy}"
     };
 
-        _dataAccess.Create(createLog);
+        await _dataAccess.Create(createLog);
     }
 
 
-    public void DeleteUser(User user) {
-        var deletedUser = _dataAccess.Delete(user);
+    public async Task DeleteUser(User user) {
+        var deletedUser = await _dataAccess.Delete(user);
 
         Log deleteLog = new Log
         {
@@ -59,12 +58,12 @@ public class UserService : IUserService
                 $"Date Of Birth: {deletedUser.DateOfBirth:MM/dd/yyyy}"
         };
 
-        _dataAccess.Create(deleteLog);
+        await _dataAccess.Create(deleteLog);
     }
 
-    public void EditUser(User user)
+    public async Task EditUser(User user)
     {
-        var updatedUser = _dataAccess.UpdateEntity(user);
+        var updatedUser = await _dataAccess.UpdateEntity(user);
 
         Log updateLog = new Log
         {
@@ -79,6 +78,6 @@ public class UserService : IUserService
                 $"Date Of Birth: {user.DateOfBirth:MM/dd/yyyy} set to  {updatedUser.DateOfBirth:MM/dd/yyyy}"
         };
 
-        _dataAccess.Create(updateLog);
+        await _dataAccess.Create(updateLog);
     }
 }

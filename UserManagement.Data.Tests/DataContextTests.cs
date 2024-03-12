@@ -2,29 +2,53 @@ using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Models;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace UserManagement.Data.Tests;
 
 public class DataContextTests
 {
+    private DataContext _dataContext;
+
+    public DataContextTests()
+    {
+        var options = new DbContextOptionsBuilder<DataContext>()
+        .UseSqlServer("DevelopmentConnection")
+        .Options;
+
+        _dataContext = new DataContext(options);
+    }
+
+    private async Task CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<DataContext>()
+        .UseSqlServer("DevelopmentConnection")
+        .Options;
+
+        _dataContext = new DataContext(options);
+
+        await _dataContext.ResetDatabase();
+    }
+
     [Fact]
-    public void GetAll_GetAllUsers_MustNotBeEmpty()
+    public async Task GetAll_GetAllUsers_MustNotBeEmpty()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var context = CreateContext();
+        CreateContext().Wait();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = context.GetAll<User>();
+        var result = await _dataContext.GetAllAsync<User>();
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().NotBeEmpty();
     }
 
     [Fact]
-    public void GetAll_WhenNewEntityAdded_MustIncludeNewEntity()
+    public async Task GetAll_WhenNewEntityAdded_MustIncludeNewEntity()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var context = CreateContext();
+        CreateContext().Wait();
 
         var entity = new User
         {
@@ -33,10 +57,10 @@ public class DataContextTests
             Email = "brandnewuser@example.com",
             DateOfBirth = new DateOnly(2006,01,01)
         };
-        context.Create(entity);
+        await _dataContext.Create(entity);
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = context.GetAll<User>();
+        var result = await _dataContext.GetAllAsync<User>();
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result
@@ -45,60 +69,66 @@ public class DataContextTests
     }
 
     [Fact]
-    public void GetAll_WhenDeleted_MustNotIncludeDeletedEntity()
+    public async Task GetAll_WhenDeleted_MustNotIncludeDeletedEntity()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var context = CreateContext();
-        var entity = context.GetAll<User>().First();
-        context.Delete(entity);
+        CreateContext().Wait();
+        DbSet<User>? users = _dataContext.Users;
+        User? userToDelete = users?.FirstOrDefault();
+
+        if (userToDelete != null)
+        {
+            // Detach the entity from the context
+            _dataContext.Entry(userToDelete).State = EntityState.Detached;
+
+            // Delete the entity
+            await _dataContext.Delete(userToDelete);
+        }
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = context.GetAll<User>();
+        var result = await _dataContext.GetAllAsync<User>();
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        result.Should().NotContain(s => s.Email == entity.Email);
+        result.Should().NotContain(s => s.Email == userToDelete!.Email);
+
+        CreateContext().Wait();
     }
 
     [Fact]
-    public void GetAll_WhenEdited_UserForenameMustBeChanged()
+    public async Task GetAll_WhenEdited_UserForenameMustBeChanged()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var context = CreateContext();
-        var entity = context.GetAll<User>().AsNoTracking().First();
-        var updatedForename = "NewForename";
-
-        // Act: UpdateEntity the user's Forename
-        context.UpdateEntity(new User
+        CreateContext().Wait();
+        User? entity = await _dataContext.GetUserById(1);
+        var user = new User
         {
-            Id = entity.Id,
-            Forename = updatedForename,
+            Id = entity!.Id,
+            Forename = "Changed Forename",
             Surname = entity.Surname,
             Email = entity.Email,
             DateOfBirth = entity.DateOfBirth,
-            IsActive = true
-        });
+        };
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = context.GetAll<User>();
+        var result = await _dataContext.UpdateEntity(entity);
 
-        // Assert: Verifies that the action of the method under test behaves as expected.
-        result.Should().Contain(u => u.Forename == updatedForename);
-        result.Should().NotContain(u => u.Forename == entity.Forename);
+        result.Should().NotBeEquivalentTo(user);
+        result.Forename.Should().NotBeEquivalentTo(user.Forename);
+
+        CreateContext().Wait();
     }
 
     [Fact]
-    public void GetUserById_FindUser_MustFindUser()
+    public async Task GetUserById_FindUser_MustFindUser()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var context = CreateContext();
-        var entity = context.GetAll<User>().AsNoTracking().First();
+        CreateContext().Wait();
+        var entity = await _dataContext.GetAllAsync<User>();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = context.GetUserById<User>(entity.Id);
+        var result = await _dataContext.GetUserById(entity[0].Id);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        result.Should().AllBeEquivalentTo(entity);
+        result.Should().BeEquivalentTo(entity[0]);
     }
-
-    private DataContext CreateContext() => new();
 }

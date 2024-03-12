@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using UserManagement.Models;
 using UserManagement.Data;
+using System.Threading.Tasks;
 
 namespace UserManagement.Services.Domain.Interfaces;
 
@@ -11,8 +11,8 @@ public interface ILogService
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    IEnumerable<Log> GetAllLogs();
-    IEnumerable<Log> FilterByType(string? type);
-    IEnumerable<Log> GetAllUserLogsById(long id);
-    Log? CheckIfLogExists(long id);
+    Task<IEnumerable<Log>> GetAllLogs();
+    Task<IEnumerable<Log>> FilterByType(string type);
+    Task<IEnumerable<Log>> GetAllUserLogsById(long id);
+    Task<Log?> CheckIfLogExists(long id);
 }

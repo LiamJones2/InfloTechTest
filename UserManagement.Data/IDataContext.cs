@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UserManagement.Models;
 
@@ -15,13 +14,19 @@ public interface IDataContext
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     /// <returns></returns>
-    IQueryable<TEntity> GetAll<TEntity>() where TEntity : class;
+    Task<List<User>> FilterUserByActiveAsync(bool isActive);
 
-    IEnumerable<Log> GetAllUserLogsById(long id);
+    Task<List<TEntity>> GetAllAsync<TEntity>() where TEntity : class;
 
-    IQueryable<User> GetUserById<TEntity>(long id) where TEntity : class;
+    Task<IEnumerable<Log>> GetAllUserLogsById(long id);
 
-    IQueryable<Log> GetLogById<TEntity>(long id) where TEntity : class;
+    Task<User?> GetUserById(long id);
+
+    Task<List<Log>> FilterLogByTypeAsync(string type);
+
+    Task<Log?> GetLogById(long id);
+
+    Task ResetDatabase();
 
     /// <summary>
     /// Create a new item
@@ -29,7 +34,7 @@ public interface IDataContext
     /// <typeparam name="TEntity"></typeparam>
     /// <param name="entity"></param>
     /// <returns></returns>
-    TEntity Create<TEntity>(TEntity entity) where TEntity : class;
+    Task<TEntity> Create<TEntity>(TEntity entity) where TEntity : class;
 
     /// <summary>
     /// Uodate an existing item matching the ID
@@ -37,9 +42,7 @@ public interface IDataContext
     /// <typeparam name="TEntity"></typeparam>
     /// <param name="entity"></param>
     /// <returns></returns>
-    TEntity UpdateEntity<TEntity>(TEntity entity) where TEntity : class;
+    Task<TEntity> UpdateEntity<TEntity>(TEntity entity) where TEntity : class;
 
-    TEntity Delete<TEntity>(TEntity entity) where TEntity : class;
-
-    void SetupLogs(IEnumerable<Log> logs);
+    Task<TEntity> Delete<TEntity>(TEntity entity) where TEntity : class;
 }

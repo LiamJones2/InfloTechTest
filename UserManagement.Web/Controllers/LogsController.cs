@@ -2,6 +2,7 @@
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Data;
 using UserManagement.Web.Models.Logs;
+using System.Threading.Tasks;
 
 namespace UserManagement.WebMS.Controllers;
 
@@ -11,14 +12,14 @@ public class LogsController : Controller
     public LogsController(ILogService logService) => _logService = logService;
 
     [HttpGet]
-    public ViewResult List(string? type)
+    public async Task<ViewResult> List(string? type)
     {
         IEnumerable<Log> logItems;
 
-        if (type != null) logItems = _logService.FilterByType(type);
-        else logItems = _logService.GetAllLogs();
+        if (!string.IsNullOrEmpty(type)) logItems = await _logService.FilterByType(type);
+        else logItems = await _logService.GetAllLogs();
 
-        LogListViewModel userViewModel = new LogListViewModel
+        LogListViewModel logViewModel = new LogListViewModel
         {
             Items = logItems.Select(p => new Log
             {
@@ -32,13 +33,13 @@ public class LogsController : Controller
             .ToList()
         };
 
-        return View(userViewModel);
+        return View(logViewModel);
     }
 
     [HttpGet]
-    public ViewResult View(long id)
+    public async Task<ViewResult> View(long id)
     {
-        Log? log = _logService.CheckIfLogExists(id);
+        Log? log = await _logService.CheckIfLogExists(id);
 
         if (log != null)
         {

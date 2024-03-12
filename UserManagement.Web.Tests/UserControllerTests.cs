@@ -1,95 +1,108 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using UserManagement.Models;
+using Microsoft.EntityFrameworkCore;
 using UserManagement.Services.Domain.Implementations;
 using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 using UserManagement.WebMS.Controllers;
+using System.Threading.Tasks;
 
 namespace UserManagement.Data.Tests;
 
 public class UserControllerTests
 {
-    private readonly IDataContext _dataContextMock;
-    private readonly ILogService _logService;
-    private readonly IUserService _userService;
-    private readonly UsersController _controller;
+    private IDataContext _dataContext;
+    private ILogService _logService;
+    private IUserService _userService;
+    private UsersController _controller;
 
     public UserControllerTests()
     {
-        _dataContextMock = new DataContext();
+        var options = new DbContextOptionsBuilder<DataContext>()
+        .UseSqlServer("DevelopmentConnection")
+        .Options;
 
+        _dataContext = new DataContext(options);
 
-        _userService = new UserService(_dataContextMock);
-        _logService = new LogService(_dataContextMock);
+        _userService = new UserService(_dataContext);
+        _logService = new LogService(_dataContext);
         _controller = new UsersController(_userService, _logService);
     }
 
+    public async Task CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<DataContext>()
+        .UseSqlServer("DevelopmentConnection")
+        .Options;
+
+        _dataContext = new DataContext(options);
+
+        _userService = new UserService(_dataContext);
+        _logService = new LogService(_dataContext);
+        _controller = new UsersController(_userService, _logService);
+
+        await _dataContext.ResetDatabase();
+    }
+
     [Fact]
-    public void List_WhenServiceReturnsUsers_ModelMustContainUsers()
+    public async Task List_WhenServiceReturnsUsers_ModelMustContainUsers()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var users = _dataContextMock.Users;
+        CreateContext().Wait();
+        var users = _dataContext.Users;
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = _controller.List();
+        ViewResult result = await _controller.List();
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         users.Should().NotHaveCount(0);
 
-        result.Model
-            .Should().BeOfType<UserListViewModel>()
-            .Which.Items.Should().BeEquivalentTo(users);
+        var userListViewModel = (UserListViewModel)result.Model!;
+        userListViewModel.Items.Should().AllBeOfType<UserListItemViewModel>().And.BeEquivalentTo(users);
     }
 
     [Fact]
-    public void List_WhenServiceReturnsActiveUsers_ModelMustContainOnlyActiveUsers()
+    public async Task List_WhenServiceReturnsActiveUsers_ModelMustContainOnlyActiveUsers()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var users = _dataContextMock.Users;
+        CreateContext().Wait();
+        var users = _dataContext.Users;
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = _controller.List(isActive: true);
-
-
+        ViewResult result = await _controller.List(isActive: true);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        users.Should().NotHaveCount(0);
+        result.Should().BeOfType<ViewResult>();
+        result.Model.Should().BeOfType<UserListViewModel>();
 
-        result.Model
-            .Should().BeOfType<UserListViewModel>()
-            .Which.Items.Should().NotHaveCount(0);
-        result.Model
-            .Should().BeOfType<UserListViewModel>()
-            .Which.Items.Should().OnlyContain(user => user.IsActive == true);
+        var userListViewModel = (UserListViewModel)result.Model!;
+        userListViewModel.Items.Should().OnlyContain(user => user.IsActive == true);
     }
 
     [Fact]
-    public void List_WhenServiceReturnsNonActiveUsers_ModelMustContainOnlyNonActiveUsers()
+    public async Task List_WhenServiceReturnsNonActiveUsers_ModelMustContainOnlyNonActiveUsers()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var users = _dataContextMock.Users;
+        await CreateContext();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = _controller.List(isActive: false);
+        ViewResult result = await _controller.List(isActive: false);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
-        users.Should().NotHaveCount(0);
+        result.Should().BeOfType<ViewResult>();
+        result.Model.Should().BeOfType<UserListViewModel>();
 
-        result.Model
-            .Should().BeOfType<UserListViewModel>()
-            .Which.Items.Should().OnlyContain(user => user.IsActive == false);
+        var userListViewModel = (UserListViewModel)result.Model!;
+        userListViewModel.Items.Should().OnlyContain(user => user.IsActive == false);
     }
 
     [Fact]
-    public void PostNewUser_GivenCorrectModel_RedirectToList()
+    public async Task PostNewUser_GivenCorrectModel_RedirectToList()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
-        var users = _dataContextMock.Users;
+        CreateContext().Wait();
+        var users = _dataContext.Users;
 
         var validUserModel = new UserListItemViewModel
         {
@@ -100,7 +113,7 @@ public class UserControllerTests
         };
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = _controller.PostNewUser(validUserModel);
+        var result = await _controller.PostNewUser(validUserModel);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeOfType<RedirectToActionResult>()
@@ -108,9 +121,10 @@ public class UserControllerTests
     }
 
     [Fact]
-    public void PostNewUser_MissingForename_RedirectBackToPageWithForenameIsRequiredError()
+    public async Task PostNewUser_MissingForename_RedirectBackToPageWithForenameIsRequiredError()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        CreateContext().Wait();
         var invalidUser = new UserListItemViewModel
         {
             Surname = "Test",
@@ -120,7 +134,7 @@ public class UserControllerTests
 
         // Act: Invokes the method under test with the arranged parameters.
         _controller.ModelState.AddModelError("Forename", "The Forename field is required.");
-        var result = _controller.PostNewUser(invalidUser);
+        var result = await _controller.PostNewUser(invalidUser);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         var viewResult = result.Should().BeOfType<ViewResult>().Subject;
@@ -138,9 +152,10 @@ public class UserControllerTests
     }
 
     [Fact]
-    public void PostNewUser_MissingSurname_RedirectBackToPageWithSurnameIsRequiredError()
+    public async Task PostNewUser_MissingSurname_RedirectBackToPageWithSurnameIsRequiredError()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        CreateContext().Wait();
         var invalidUser = new UserListItemViewModel
         {
             Forename = "Test",
@@ -150,7 +165,7 @@ public class UserControllerTests
 
         // Act: Invokes the method under test with the arranged parameters.
         _controller.ModelState.AddModelError("Surname", "The Surname field is required.");
-        var result = _controller.PostNewUser(invalidUser);
+        var result = await _controller.PostNewUser(invalidUser);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         var viewResult = result.Should().BeOfType<ViewResult>().Subject;
@@ -168,9 +183,10 @@ public class UserControllerTests
     }
 
     [Fact]
-    public void PostNewUser_MissingEmail_RedirectBackToPageWithEmailIsRequiredError()
+    public async Task PostNewUser_MissingEmail_RedirectBackToPageWithEmailIsRequiredError()
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        CreateContext().Wait();
         var invalidUser = new UserListItemViewModel
         {
             Forename = "Test",
@@ -180,7 +196,7 @@ public class UserControllerTests
 
         // Act: Invokes the method under test with the arranged parameters.
         _controller.ModelState.AddModelError("Email", "The Email Address field is required.");
-        var result = _controller.PostNewUser(invalidUser);
+        var result = await _controller.PostNewUser(invalidUser);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         var viewResult = result.Should().BeOfType<ViewResult>().Subject;

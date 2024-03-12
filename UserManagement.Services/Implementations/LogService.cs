@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UserManagement.Data;
-using UserManagement.Models;
 using UserManagement.Services.Domain.Interfaces;
+using System.Threading.Tasks;
 
 namespace UserManagement.Services.Domain.Implementations;
 
@@ -19,11 +16,11 @@ public class LogService : ILogService
     /// <param name="isActive"></param>
     /// <returns></returns>
     
-    public IEnumerable<Log> GetAllLogs() => _dataAccess.GetAll<Log>();
+    public async Task<IEnumerable<Log>> GetAllLogs() => await _dataAccess.GetAllAsync<Log>();
 
-    public IEnumerable<Log> FilterByType(string? type) => _dataAccess.GetAll<Log>().Where(log => log.Type == type);
+    public async Task<IEnumerable<Log>> FilterByType(string type) => await _dataAccess.FilterLogByTypeAsync(type);
 
-    public IEnumerable<Log> GetAllUserLogsById(long id) => _dataAccess.GetAllUserLogsById(id);
+    public async Task<IEnumerable<Log>> GetAllUserLogsById(long id) => await _dataAccess.GetAllUserLogsById(id);
 
-    public Log? CheckIfLogExists(long id) => _dataAccess.GetLogById<Log>(id).FirstOrDefault();
+    public async Task<Log?> CheckIfLogExists(long id) => await _dataAccess.GetLogById(id);
 }

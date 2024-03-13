@@ -7,6 +7,7 @@ using UserManagement.Services.Domain.Interfaces;
 using UserManagement.Web.Models.Users;
 using UserManagement.WebMS.Controllers;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace UserManagement.Data.Tests;
 
@@ -20,7 +21,7 @@ public class UserControllerTests
     public UserControllerTests()
     {
         var options = new DbContextOptionsBuilder<DataContext>()
-        .UseSqlServer("DevelopmentConnection")
+        .UseInMemoryDatabase("UserManagement.Data.DataContext")
         .Options;
 
         _dataContext = new DataContext(options);
@@ -33,7 +34,7 @@ public class UserControllerTests
     public async Task CreateContext()
     {
         var options = new DbContextOptionsBuilder<DataContext>()
-        .UseSqlServer("DevelopmentConnection")
+        .UseInMemoryDatabase("UserManagement.Data.DataContext")
         .Options;
 
         _dataContext = new DataContext(options);
@@ -42,7 +43,7 @@ public class UserControllerTests
         _logService = new LogService(_dataContext);
         _controller = new UsersController(_userService, _logService);
 
-        await _dataContext.ResetDatabase();
+        await _dataContext.ResetDatabaseAsync();
     }
 
     [Fact]
@@ -53,13 +54,15 @@ public class UserControllerTests
         var users = _dataContext.Users;
 
         // Act: Invokes the method under test with the arranged parameters.
-        ViewResult result = await _controller.List();
+        IActionResult result = await _controller.List();
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         users.Should().NotHaveCount(0);
+        var viewResult = (ViewResult)result;
+        viewResult.Model.Should().BeAssignableTo<UserListViewModel>();
 
-        var userListViewModel = (UserListViewModel)result.Model!;
-        userListViewModel.Items.Should().AllBeOfType<UserListItemViewModel>().And.BeEquivalentTo(users);
+        var userListViewModel = (UserListViewModel)viewResult.Model!;
+        userListViewModel.Items.Should().BeEquivalentTo(users);
     }
 
     [Fact]
@@ -70,13 +73,14 @@ public class UserControllerTests
         var users = _dataContext.Users;
 
         // Act: Invokes the method under test with the arranged parameters.
-        ViewResult result = await _controller.List(isActive: true);
+        IActionResult result = await _controller.List(isActive: true);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeOfType<ViewResult>();
-        result.Model.Should().BeOfType<UserListViewModel>();
+        var viewResult = (ViewResult)result;
+        viewResult.Model.Should().BeAssignableTo<UserListViewModel>();
 
-        var userListViewModel = (UserListViewModel)result.Model!;
+        var userListViewModel = (UserListViewModel)viewResult.Model!;
         userListViewModel.Items.Should().OnlyContain(user => user.IsActive == true);
     }
 
@@ -87,13 +91,14 @@ public class UserControllerTests
         await CreateContext();
 
         // Act: Invokes the method under test with the arranged parameters.
-        ViewResult result = await _controller.List(isActive: false);
+        IActionResult result = await _controller.List(isActive: false);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeOfType<ViewResult>();
-        result.Model.Should().BeOfType<UserListViewModel>();
+        var viewResult = (ViewResult)result;
+        viewResult.Model.Should().BeAssignableTo<UserListViewModel>();
 
-        var userListViewModel = (UserListViewModel)result.Model!;
+        var userListViewModel = (UserListViewModel)viewResult.Model!;
         userListViewModel.Items.Should().OnlyContain(user => user.IsActive == false);
     }
 

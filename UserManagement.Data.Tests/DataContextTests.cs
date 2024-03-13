@@ -14,7 +14,7 @@ public class DataContextTests
     public DataContextTests()
     {
         var options = new DbContextOptionsBuilder<DataContext>()
-        .UseSqlServer("DevelopmentConnection")
+        .UseInMemoryDatabase("UserManagement.Data.DataContext")
         .Options;
 
         _dataContext = new DataContext(options);
@@ -23,12 +23,12 @@ public class DataContextTests
     private async Task CreateContext()
     {
         var options = new DbContextOptionsBuilder<DataContext>()
-        .UseSqlServer("DevelopmentConnection")
+        .UseInMemoryDatabase("UserManagement.Data.DataContext")
         .Options;
 
         _dataContext = new DataContext(options);
 
-        await _dataContext.ResetDatabase();
+        await _dataContext.ResetDatabaseAsync();
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class DataContextTests
             Email = "brandnewuser@example.com",
             DateOfBirth = new DateOnly(2006,01,01)
         };
-        await _dataContext.Create(entity);
+        await _dataContext.CreateEntityAsync(entity);
 
         // Act: Invokes the method under test with the arranged parameters.
         var result = await _dataContext.GetAllAsync<User>();
@@ -81,8 +81,8 @@ public class DataContextTests
             // Detach the entity from the context
             _dataContext.Entry(userToDelete).State = EntityState.Detached;
 
-            // Delete the entity
-            await _dataContext.Delete(userToDelete);
+            // DeleteEntityAsync the entity
+            await _dataContext.DeleteEntityAsync(userToDelete);
         }
 
         // Act: Invokes the method under test with the arranged parameters.
@@ -99,7 +99,7 @@ public class DataContextTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         CreateContext().Wait();
-        User? entity = await _dataContext.GetUserById(1);
+        User? entity = await _dataContext.GetUserByIdAsync(1);
         var user = new User
         {
             Id = entity!.Id,
@@ -110,7 +110,7 @@ public class DataContextTests
         };
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = await _dataContext.UpdateEntity(entity);
+        var result = await _dataContext.UpdateEntityAsync(entity);
 
         result.Should().NotBeEquivalentTo(user);
         result.Forename.Should().NotBeEquivalentTo(user.Forename);
@@ -126,7 +126,7 @@ public class DataContextTests
         var entity = await _dataContext.GetAllAsync<User>();
 
         // Act: Invokes the method under test with the arranged parameters.
-        var result = await _dataContext.GetUserById(entity[0].Id);
+        var result = await _dataContext.GetUserByIdAsync(entity[0].Id);
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().BeEquivalentTo(entity[0]);

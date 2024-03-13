@@ -17,13 +17,15 @@ public class UsersController : Controller
         _logService = logService;
     }
 
+    // When requested returns List view to client with User data depending on what isActive is
+    // If isActive isn't null then it returns users with IsActive to that value
     [HttpGet]
-    public async Task<ViewResult> List(bool? isActive = null)
+    public async Task<IActionResult> List(bool? isActive = null)
     {
 
         IEnumerable<User> userItems;
 
-        if (isActive.HasValue) userItems = await _userService.FilterByActive(isActive.GetValueOrDefault(false));
+        if (isActive.HasValue) userItems = await _userService.FilterByActiveAsync(isActive.GetValueOrDefault(false));
         else userItems = await _userService.GetAllUsersAsync();
 
         UserListViewModel userViewModel = new UserListViewModel
@@ -44,16 +46,18 @@ public class UsersController : Controller
         return View(userViewModel);
     }
 
+    // When requested returns Add view
     [HttpGet]
-    public ViewResult Add()
+    public IActionResult Add()
     {
         return View();
     }
 
+    // When requested returns Edit view for a certain user if it exists else redirects to NotFound
     [HttpGet]
-    public async Task<ViewResult> Edit(long id)
+    public async Task<IActionResult> Edit(long id)
     {
-        User? user = await _userService.CheckIfUserExists(id);
+        User? user = await _userService.CheckIfUserExistsAsync(id);
 
         if (user != null)
         {
@@ -69,13 +73,14 @@ public class UsersController : Controller
 
             return View(modelUser);
         }
-        return View();
+        return NotFound();
     }
 
+    // When requested returns View view for a certain user if it exists else redirects to NotFound
     [HttpGet]
-    public async Task<ViewResult> View(long id)
+    public async Task<IActionResult> View(long id)
     {
-        User? user = await _userService.CheckIfUserExists(id);
+        User? user = await _userService.CheckIfUserExistsAsync(id);
 
         if (user != null)
         {
@@ -94,13 +99,14 @@ public class UsersController : Controller
 
             return View(modelUser);
         }
-        return View();
+        return NotFound();
     }
 
+    // When requested returns DeleteEntityAsync view for a certain user if it exists else redirects to NotFound
     [HttpGet]
-    public async Task<ViewResult> Delete(long id)
+    public async Task<IActionResult> Delete(long id)
     {
-        User? user = await _userService.CheckIfUserExists(id);
+        User? user = await _userService.CheckIfUserExistsAsync(id);
 
         if (user != null)
         {
@@ -116,9 +122,10 @@ public class UsersController : Controller
 
             return View(modelUser);
         }
-        return View();
+        return NotFound();
     }
 
+    // When requested by client, checks for correct data and if it is valid then we make a request to the _userService to add that new user to the database
     [HttpPost]
     public async Task<IActionResult> PostNewUser(UserListItemViewModel modelUser)
     {
@@ -133,7 +140,7 @@ public class UsersController : Controller
                 IsActive = true
             };
 
-            await _userService.AddNewUser(user);
+            await _userService.AddNewUserAsync(user);
 
             return RedirectToAction("List");
         }
@@ -143,6 +150,7 @@ public class UsersController : Controller
         }
     }
 
+    // When requested by client, checks for correct data and if it is valid then we make a request to the _userService to add that edit an existing user in the database
     [HttpPost]
     public async Task<IActionResult> EditUser(UserListItemViewModel modelUser)
     {
@@ -164,7 +172,7 @@ public class UsersController : Controller
                 IsActive = true
             };
 
-            await _userService.EditUser(user);
+            await _userService.EditUserAsync(user);
 
 
             return RedirectToAction("List");
@@ -175,6 +183,7 @@ public class UsersController : Controller
         }
     }
 
+    // When requested by client, checks for correct data and if it is valid then we make a request to the _userService to delete that existing user in the database
     [HttpPost]
     public async Task<IActionResult> DeleteUser(UserListItemViewModel modelUser)
     {
@@ -190,7 +199,7 @@ public class UsersController : Controller
                 IsActive = true
             };
 
-            await _userService.DeleteUser(user);
+            await _userService.DeleteUserAsync(user);
 
             return RedirectToAction("List");
         }

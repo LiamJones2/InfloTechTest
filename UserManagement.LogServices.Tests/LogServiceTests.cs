@@ -8,6 +8,8 @@ using UserManagement.Models;
 using System;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Reflection.Metadata;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace UserManagement.Data.Tests;
 
@@ -21,7 +23,7 @@ public class LogServiceTests
     public LogServiceTests()
     {
         var options = new DbContextOptionsBuilder<DataContext>()
-        .UseSqlServer("DevelopmentConnection")
+        .UseInMemoryDatabase("UserManagement.Data.DataContext")
         .Options;
 
         _dataContext = new DataContext(options);
@@ -29,17 +31,10 @@ public class LogServiceTests
         _userService = new UserService(_dataContext);
     }
 
+    // Resets dependencies and database back to test data before each test
     private async Task ResetContext()
     {
-        var options = new DbContextOptionsBuilder<DataContext>()
-        .UseSqlServer("DevelopmentConnection")
-        .Options;
-
-        _dataContext = new DataContext(options);
-        _logService = new LogService(_dataContext);
-        _userService = new UserService(_dataContext);
-
-        await _dataContext.ResetDatabase();
+        await _dataContext.ResetDatabaseAsync();
     }
 
     [Fact]
@@ -65,12 +60,16 @@ public class LogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         ResetContext().Wait();
+        var logs = LogTestData.GetLogArray();
+        var filteredLogs = logs.Where(log => log.Type == "Created User").ToList();
 
         // Act: Invokes the method under test with the arranged parameters.
         var result = await _logService.FilterByType("Created User");
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().NotBeNull();
+        result.Should().NotBeEmpty();
+        result.Should().BeEquivalentTo(filteredLogs, options => options.WithStrictOrdering());
         result.Should().OnlyContain(log => log.Type == "Created User");
     }
 
@@ -79,12 +78,16 @@ public class LogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         ResetContext().Wait();
+        var logs = LogTestData.GetLogArray();
+        var filteredLogs = logs.Where(log => log.Type == "Updated User").ToList();
 
         // Act: Invokes the method under test with the arranged parameters.
         var result = await _logService.FilterByType("Updated User");
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().NotBeNull();
+        result.Should().NotBeEmpty();
+        result.Should().BeEquivalentTo(filteredLogs, options => options.WithStrictOrdering());
         result.Should().OnlyContain(log => log.Type == "Updated User");
     }
 
@@ -93,12 +96,16 @@ public class LogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         ResetContext().Wait();
+        var logs = LogTestData.GetLogArray();
+        var filteredLogs = logs.Where(log => log.Type == "Deleted User").ToList();
 
         // Act: Invokes the method under test with the arranged parameters.
         var result = await _logService.FilterByType("Deleted User");
 
         // Assert: Verifies that the action of the method under test behaves as expected.
         result.Should().NotBeNull();
+        result.Should().NotBeEmpty();
+        result.Should().BeEquivalentTo(filteredLogs, options => options.WithStrictOrdering());
         result.Should().OnlyContain(log => log.Type == "Deleted User");
     }
 
@@ -117,7 +124,7 @@ public class LogServiceTests
             IsActive = true
         };
 
-        await _userService.AddNewUser(user);
+        await _userService.AddNewUserAsync(user);
 
         // Act: Invokes the method under test with the arranged parameters.
         var newLogs = await _logService.GetAllLogs();
@@ -134,14 +141,18 @@ public class LogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         ResetContext().Wait();
-        User? user = await _userService.CheckIfUserExists(1);
+        User? user = await _userService.CheckIfUserExistsAsync(1);
         var oldLogs = await _logService.GetAllLogs();
         string savedForename = "";
         if (user != null)
         {
             savedForename = user.Forename;
             user.Forename = "NewForename";
-            await _userService.EditUser(user);
+            await _userService.EditUserAsync(user);
+        }
+        else
+        {
+            throw new Exception("Error getting user");
         }
 
         // Act: Invokes the method under test with the arranged parameters.
@@ -161,12 +172,12 @@ public class LogServiceTests
     {
         // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
         ResetContext().Wait();
-        User? user = await _userService.CheckIfUserExists(1);
+        User? user = await _userService.CheckIfUserExistsAsync(1);
         var oldLogs = await _logService.GetAllLogs();
 
         if (user != null)
         {
-            await _userService.DeleteUser(user);
+            await _userService.DeleteUserAsync(user);
         }
         else
         {
@@ -181,5 +192,36 @@ public class LogServiceTests
         newLogs.Count().Should().Be(oldLogs.Count() + 1);
         result.Type.Should().Be("Deleted User");
         result.Changes.Should().Contain(user.Forename);
+    }
+
+    [Fact]
+    public async Task GetAllUserLogsById_WhenRequested_ReturnUsersLogs()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        ResetContext().Wait();
+        var logs = LogTestData.GetLogArray();
+        var filteredLogs = logs.Where(log => log.UserId == 1).ToList();
+
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var usersLogs = await _logService.GetAllUserLogsById(1);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        usersLogs.Should().NotBeEmpty();
+        usersLogs.Should().BeEquivalentTo(filteredLogs);
+    }
+
+    [Fact]
+    public async Task CheckIfLogExists_WhenRequested_ReturnLog()
+    {
+        // Arrange: Initializes objects and sets the value of the data that is passed to the method under test.
+        ResetContext().Wait();
+        var logs = LogTestData.GetLogArray();
+
+        // Act: Invokes the method under test with the arranged parameters.
+        var log = await _logService.CheckIfLogExists(1);
+
+        // Assert: Verifies that the action of the method under test behaves as expected.
+        log.Should().BeEquivalentTo(logs[0]);
     }
 }

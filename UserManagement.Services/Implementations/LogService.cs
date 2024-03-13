@@ -15,12 +15,16 @@ public class LogService : ILogService
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    
+
+    // Gets all logs in database and returns them to controller
     public async Task<IEnumerable<Log>> GetAllLogs() => await _dataAccess.GetAllAsync<Log>();
 
+    // Gets all logs in database that have the correct type
     public async Task<IEnumerable<Log>> FilterByType(string type) => await _dataAccess.FilterLogByTypeAsync(type);
 
-    public async Task<IEnumerable<Log>> GetAllUserLogsById(long id) => await _dataAccess.GetAllUserLogsById(id);
+    // Gets all logs in database for a particular user by id
+    public async Task<IEnumerable<Log>> GetAllUserLogsById(long id) => await _dataAccess.GetAllUserLogsByIdAsync(id);
 
-    public async Task<Log?> CheckIfLogExists(long id) => await _dataAccess.GetLogById(id);
+    // Gets a certain log by id and returns it to controller
+    public async Task<Log?> CheckIfLogExists(long id) => await _dataAccess.GetLogByIdAsync(id);
 }

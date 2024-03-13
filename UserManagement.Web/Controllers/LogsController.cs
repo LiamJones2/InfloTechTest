@@ -11,8 +11,10 @@ public class LogsController : Controller
     private readonly ILogService _logService;
     public LogsController(ILogService logService) => _logService = logService;
 
+    // When requested returns List view to client with Log data depending on what type is
+    // If type isn't null then it returns logs with type to that value
     [HttpGet]
-    public async Task<ViewResult> List(string? type)
+    public async Task<IActionResult> List(string? type)
     {
         IEnumerable<Log> logItems;
 
@@ -36,8 +38,9 @@ public class LogsController : Controller
         return View(logViewModel);
     }
 
+    // When requested returns View view for a certain log if it exists else redirects to NotFound
     [HttpGet]
-    public async Task<ViewResult> View(long id)
+    public async Task<IActionResult> View(long id)
     {
         Log? log = await _logService.CheckIfLogExists(id);
 
@@ -45,6 +48,6 @@ public class LogsController : Controller
         {
             return View(log);
         }
-        return View();
+        return NotFound();
     }
 }

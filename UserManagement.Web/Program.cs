@@ -5,6 +5,8 @@ using UserManagement.Services.Domain.Implementations;
 using UserManagement.Services.Domain.Interfaces;
 using Westwind.AspNetCore.Markdown;
 using UserManagement.Data;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,9 +16,24 @@ builder.Services
     .AddMarkdown()
     .AddControllersWithViews();
 
-builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer("DevelopmentConnection"));
+IConfigurationRoot configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json")
+    .Build();
 
-builder.Services.AddScoped<IDataContext>(provider => provider.GetService<DataContext>()!);
+string? connectionString = configuration.GetConnectionString("DevelopmentConnection");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    // Use in-memory database if connection string is not found
+    builder.Services.AddDbContext<DataContext>(options => options.UseInMemoryDatabase("InMemoryDatabase"));
+}
+else
+{
+    builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
+}
+
+builder.Services.AddScoped<IDataContext, DataContext>();
 builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IUserService, UserService>();
 

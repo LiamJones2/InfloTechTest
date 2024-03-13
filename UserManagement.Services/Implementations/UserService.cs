@@ -17,15 +17,20 @@ public class UserService : IUserService
     /// </summary>
     /// <param name="isActive"></param>
     /// <returns></returns>
-    public async Task<IEnumerable<User>> FilterByActive(bool isActive) => await _dataAccess.FilterUserByActiveAsync(isActive);
+    
+    // Returns all users with the parameter IsActive from database
+    public async Task<IEnumerable<User>> FilterByActiveAsync(bool isActive) => await _dataAccess.FilterUserByActiveAsync(isActive);
 
+    // Returns all users to the controller from database
     public async Task<IEnumerable<User>> GetAllUsersAsync() => await _dataAccess.GetAllAsync<User>();
 
-    public async Task<User?> CheckIfUserExists(long id) => await _dataAccess.GetUserById(id);
+    // Returns certain user by id from database
+    public async Task<User?> CheckIfUserExistsAsync(long id) => await _dataAccess.GetUserByIdAsync(id);
 
-    public async Task AddNewUser(User user)
+    // Makes request to database to add new user
+    public async Task AddNewUserAsync(User user)
     {
-        var createdUser = await _dataAccess.Create(user);
+        var createdUser = await _dataAccess.CreateEntityAsync(user);
 
         Log createLog = new Log
         {
@@ -39,12 +44,12 @@ public class UserService : IUserService
                 $"Date Of Birth: {createdUser.DateOfBirth:MM/dd/yyyy}"
     };
 
-        await _dataAccess.Create(createLog);
+        await _dataAccess.CreateEntityAsync(createLog);
     }
 
-
-    public async Task DeleteUser(User user) {
-        var deletedUser = await _dataAccess.Delete(user);
+    // Makes request to database to delete existing user
+    public async Task DeleteUserAsync(User user) {
+        var deletedUser = await _dataAccess.DeleteEntityAsync(user);
 
         Log deleteLog = new Log
         {
@@ -58,12 +63,13 @@ public class UserService : IUserService
                 $"Date Of Birth: {deletedUser.DateOfBirth:MM/dd/yyyy}"
         };
 
-        await _dataAccess.Create(deleteLog);
+        await _dataAccess.CreateEntityAsync(deleteLog);
     }
 
-    public async Task EditUser(User user)
+    // Makes request to database to delete existing user
+    public async Task EditUserAsync(User user)
     {
-        var updatedUser = await _dataAccess.UpdateEntity(user);
+        var updatedUser = await _dataAccess.UpdateEntityAsync(user);
 
         Log updateLog = new Log
         {
@@ -78,6 +84,6 @@ public class UserService : IUserService
                 $"Date Of Birth: {user.DateOfBirth:MM/dd/yyyy} set to  {updatedUser.DateOfBirth:MM/dd/yyyy}"
         };
 
-        await _dataAccess.Create(updateLog);
+        await _dataAccess.CreateEntityAsync(updateLog);
     }
 }
